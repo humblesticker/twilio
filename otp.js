@@ -1,6 +1,6 @@
-
-// This is your new function. To start, set the name and path on the left.
-
+// 
+// handle inline-hook request from Okta
+//
 exports.handler = function(context, event, callback) {
    // You can log with console.log
   console.log('context', context);
@@ -16,18 +16,38 @@ exports.handler = function(context, event, callback) {
   console.log('channel', channel);
   
   const twilioClient = context.getTwilioClient();
-  sendSms(twilioClient, messageProfile.phoneNumber, messageProfile.otpCode, callback);
+  sendVoice(twilioClient, context.FROM, messageProfile.phoneNumber, messageProfile.otpCode, callback);
 };
 
-const sendSms = (twilioClient, to, code, callback) => {
-  const from = '+18442170964';
+const sendVoice = (twilioClient, from, to, code, callback) => {
+  const body = 'otp:' + code;
+
+  // Use `messages.create` to generate a message. Be sure to chain with `then`
+  // and `catch` to properly handle the promise and call `callback` _after_ the
+  // message is sent successfully!
+  twilioClient.calls
+    .create({ from: "+17149420727", to, twiml: `<Response><Say>otp: ${code}</Say></Response>`})
+    .then((message) => {
+      console.log('SMS successfully sent');
+      console.log(message.sid);
+      // Make sure to only call `callback` once everything is finished, and to pass
+      // null as the first parameter to signal successful execution.
+      return callback(null, oktaResponse("SUCCESSFUL", message.sid, ""));
+    })
+    .catch((error) => {
+      console.error(error);
+      return callback(oktaResponse("FAILURE", "", ""));
+    });
+};
+
+const sendSms = (twilioClient, from, to, code, callback) => {
   const body = 'otp:' + code;
 
   // Use `messages.create` to generate a message. Be sure to chain with `then`
   // and `catch` to properly handle the promise and call `callback` _after_ the
   // message is sent successfully!
   twilioClient.messages
-    .create({ body, to, from })
+    .create({ from, to, body })
     .then((message) => {
       console.log('SMS successfully sent');
       console.log(message.sid);
