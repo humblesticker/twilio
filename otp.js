@@ -20,13 +20,12 @@ exports.handler = function(context, event, callback) {
 };
 
 const sendVoice = (twilioClient, from, to, code, callback) => {
-  const body = 'otp:' + code;
+  // one number at a time
+  code = String(code).split('').join('. ');
+  console.log(code);
 
-  // Use `messages.create` to generate a message. Be sure to chain with `then`
-  // and `catch` to properly handle the promise and call `callback` _after_ the
-  // message is sent successfully!
   twilioClient.calls
-    .create({ from: "+17149420727", to, twiml: `<Response><Say>otp: ${code}</Say></Response>`})
+    .create({ from: "+17149420727", to, twiml: createVoiceXML(code)})
     .then((message) => {
       console.log('SMS successfully sent');
       console.log(message.sid);
@@ -91,4 +90,8 @@ const oktaResponse = (status, transactionId, transactionMetadata) => {
         }],
       }]
   };
+};
+
+const createVoiceXML = (code) => {
+  return `<Response><Pause length="2"/><Say>Your code is ${code}. Once again, your code is ${code}</Say></Response>`;
 };
