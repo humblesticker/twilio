@@ -19,7 +19,8 @@ exports.handler = function(context, event, callback) {
     sendOtp(request, channel, callback);
   } else if(channel === 'voice call') {
     const oneByOne = String(code).split('').join('. '); // with . and space char, number will be read one by one
-    const request = twilioClient.calls.create({ from: context.VOICE_PHONENUMBER, to, twiml: getVoiceXML(oneByOne)});
+    const from = getPhonenumber(context.VOICE_PHONENUMBERS.split(','));
+    const request = twilioClient.calls.create({ from, to, twiml: getVoiceXML(oneByOne)});
     sendOtp(request, channel, callback);
   } else return callback(oktaResponse("FAILURE", "", `${channel} is not supported`));
 };
@@ -63,6 +64,11 @@ const oktaResponse = (status, transactionId, transactionMetadata) => {
         }],
       }]
   };
+};
+
+const getPhonenumber = (numbers) => {
+  const index = Math.floor(Math.random() * numbers.length);
+  return numbers[index];
 };
 
 const getMessageBody = (code) => {
