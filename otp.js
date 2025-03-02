@@ -17,7 +17,7 @@ exports.handler = function(context, event, callback) {
   if(channel === 'sms') { 
     const request = twilioClient.messages.create({ from: context.MESSAGE_SERVICE_ID, to, body: getMessageBody(code) }); 
     sendOtp(request, channel, callback);
-  } else if(channel === 'voice') {
+  } else if(channel === 'voice call') {
     const oneByOne = String(code).split('').join('. '); // with . and space char, number will be read one by one
     const request = twilioClient.calls.create({ from: context.VOICE_PHONENUMBER, to, twiml: getVoiceXML(oneByOne)});
     sendOtp(request, channel, callback);
@@ -29,11 +29,11 @@ exports.handler = function(context, event, callback) {
 const sendOtp = (request, channel, callback) => {
   request.then((message) => {
       console.log(`OTP successfully sent via ${channel}: ${message.sid}`);
-      return callback(null, oktaResponse("SUCCESSFUL", message.sid, ""));
+      return callback(null, oktaResponse("SUCCESSFUL", message.sid, channel));
     })
     .catch((error) => {
-      console.error(error);
-      return callback(oktaResponse("FAILURE", "", error));
+      console.error(error.message, error.code);
+      return callback(oktaResponse("FAILURE", "", `${error.code}:${error.message}`));
     });
 };
 
@@ -70,5 +70,5 @@ const getMessageBody = (code) => {
 };
 
 const getVoiceXML = (code) => {
-  return `<Response><Pause length="2"/><Say>Your code is ${code}. Once again, your code is ${code}</Say></Response>`;
+  return `<Response><Pause length="2"/><Say>Hello! Thank you for using our phone verification system. Your code is ${code}. Once again, your code is ${code}. Good bye!</Say></Response>`;
 };
